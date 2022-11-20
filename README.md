@@ -10,4 +10,4 @@
 
 # Set up:
 * first install the library fastLED according to this manual
-*Install the driver for the used arduino mini (most likely this [here])https://www.az-delivery.de/en/products/nano-v3-mit-ch340-arduino-kompatibel))
+*Install the driver for the used arduino mini (most likely this (here)[https://www.az-delivery.de/en/products/nano-v3-mit-ch340-arduino-kompatibel] )
