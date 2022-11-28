@@ -3,7 +3,6 @@
 
 RTC_DS3231 rtc;
 
-char daysOfTheWeek[7][12] = {"Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"};
 bool syncOnFirstStart = true; // true, falls die Zeitinformationen der RTC mit dem PC synchronisiert werden sollen.
                                // sollte standardmaeig auf false stehen
 
@@ -26,10 +25,6 @@ void setup () {
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     Serial.println(__DATE__);
 
-    Serial.println("Adjusted");
-    // Ein fest definierter Startzeitpunkt kann alternativ nach dem Schema
-    // (DateTime(Jahr,Tag,Monat,Stunde,Minute,Sekunde)) festgelegt werden, z.B.:
-    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
   }
 }
 
@@ -42,20 +37,20 @@ void loop () {
     
     digitalWrite(LED_BUILTIN, HIGH);
     
-    Serial.print(now.year(), DEC);
-    Serial.print('/');
-    Serial.print(now.month(), DEC);
-    Serial.print('/');
-    Serial.print(now.day(), DEC);
-    Serial.print(" (");
-    Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
-    Serial.print(") ");
+    // Serial.print(now.year(), DEC);
+    // Serial.print('/');
+    // Serial.print(now.month(), DEC);
+    // Serial.print('/');
+    // Serial.print(now.day(), DEC);
+    // Serial.print(" (");
+    // Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
+    // Serial.print(") ");
     Serial.print(now.hour(), DEC);
     Serial.print(':');
     Serial.print(now.minute(), DEC);
-    Serial.print(':');
-    Serial.print(now.second(), DEC);
-    Serial.println();
+    // Serial.print(':');
+    // Serial.print(now.second(), DEC);
+    Serial.println("What");
     
     delay(4000);
     digitalWrite(LED_BUILTIN, LOW);

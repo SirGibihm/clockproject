@@ -7,3 +7,6 @@ No resistors needed
 
 ## Library for Usage
 Can be found [HERE](https://github.com/StephanFink/RTClib/archive/master.zip)
+
+
+#include <DS3231.h>
