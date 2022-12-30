@@ -1,12 +1,16 @@
 #include <FastLED.h>
-#include <Wire.h>  // Die Datums- und Zeit-Funktionen der DS3231 RTC werden ueber das I2C aufgerufen.
+#include <Wire.h>  // Die Datums- und Zeit-Funktionen der DS3231 RTC werden ueber das I2C aufgerufen, ebenso der Lichtsensor BH1750
 #include "RTClib.h"
+#include <BH1750.h>
+
 
 #define DATA_PIN 3
 #define LED_TYPE NEOPIXEL  // WS2812B
 #define NUM_LEDS 121
 #define BRIGHTNESS 100
 RTC_DS3231 rtc;
+BH1750 lightMeter;
+
 #define color CRGB::White
 
 bool syncOnFirstStart = true;
@@ -14,6 +18,12 @@ CRGB leds[NUM_LEDS];
 
 void setup() {
   Serial.begin(9600);
+  // Initialize the I2C bus (BH1750 library doesn't do this automatically)
+  Wire.begin();
+  // On esp8266 you can select SCL and SDA pins using Wire.begin(D4, D3);
+  // For Wemos / Lolin D1 Mini Pro and the Ambient Light shield use Wire.begin(D2, D1);
+
+  lightMeter.begin();
 
   delay(3000);  // Warte auf Terminal
   FastLED.addLeds<LED_TYPE, DATA_PIN>(leds, NUM_LEDS);
@@ -21,6 +31,11 @@ void setup() {
   leds[0] = CRGB::White;
   FastLED.show();
   delay(200);
+
+
+  
+
+
   if (!rtc.begin()) {
     Serial.println("Kann RTC nicht finden");
     while (1)
@@ -37,8 +52,6 @@ void setup() {
   }
 }
 
-
-
 void manipulateDisplay(int ledArray[], int sizeLEDArray) {
   for (int i = 0; i < sizeLEDArray; i++) {
     leds[ledArray[i]] = color;
@@ -54,7 +67,6 @@ void generateDisplayDefault() {
   int defaultDisplay[] = { 0, 1, 3, 4, 5, };
   manipulateDisplay(defaultDisplay, 5);
 }
-
 
 void generateDisplayMinutes(int minute) {
  
@@ -114,7 +126,7 @@ void generateDisplayMinutes(int minute) {
 int generateDisplayHours(int input_hour, int minute) {
 
   int hour = input_hour;
-  if (minute > 30) {
+  if (minute > 24) {
     hour++;
   }
 
@@ -162,7 +174,6 @@ int generateDisplayHours(int input_hour, int minute) {
   }
 }
 
-
 void generateDisplay(int hour, int minute) {
   generateDisplayDefault();
   generateDisplayHours(hour, minute);
@@ -171,11 +182,30 @@ void generateDisplay(int hour, int minute) {
 }
 
 
+void setBrightness() {
+  int light_level = lightMeter.readLightLevel();
+  if(light_level < 5) {
+    FastLED.setBrightness(5);    
+  }
+  else if (light_level > 100) {
+    FastLED.setBrightness(200);
+  }
+  else {
+    FastLED.setBrightness(light_level*2);
+  }
+   
+  Serial.print("light: "); 
+  Serial.println(light_level); 
+}
+
 void loop() {
+  
   DateTime now = rtc.now();
   generateDisplay(now.hour(), now.minute());
   Serial.println(now.hour()%12);
-  Serial.println(now.minute()); 
+  Serial.println(now.minute());
+  setBrightness();
+  delay(10);
   
   /*for (int i = 0; i < 24; i++) {
     for (int j = 0; j < 60; j++) {
@@ -187,3 +217,9 @@ void loop() {
   delay(1000);
   */
 }
+
+
+
+
+
+
