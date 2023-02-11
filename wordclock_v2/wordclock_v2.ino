@@ -1,55 +1,72 @@
-#include <FastLED.h>
 #include <Wire.h>  // Die Datums- und Zeit-Funktionen der DS3231 RTC werden ueber das I2C aufgerufen, ebenso der Lichtsensor BH1750
-#include "RTClib.h"
-#include <BH1750.h>
 
 
+// Settings for the LEDs
+#include <FastLED.h>
 #define DATA_PIN 3
 #define LED_TYPE NEOPIXEL  // WS2812B
 #define NUM_LEDS 121
 #define BRIGHTNESS 100
+#define color CRGB::White
+CRGB leds[NUM_LEDS];
+
+
+// Settings for the clock
+#include "RTClib.h"
 RTC_DS3231 rtc;
+bool syncOnFirstStart = true;
+
+
+// Settings for the light sensor
+#include <BH1750.h>
 BH1750 lightMeter;
 
-#define color CRGB::White
 
-bool syncOnFirstStart = true;
-CRGB leds[NUM_LEDS];
+//Necessary definitions for the Rotary Encoder
+#include <Encoder.h>    
+const int CLK = 10;       
+const int DT = 9;
+const int SW = 2;       // Use interrupt for switch
+long oldPosition = -999;  // Initial position
+Encoder meinEncoder(DT,CLK);  
 
 void setup() {
   Serial.begin(9600);
-  // Initialize the I2C bus (BH1750 library doesn't do this automatically)
-  Wire.begin();
-  // On esp8266 you can select SCL and SDA pins using Wire.begin(D4, D3);
-  // For Wemos / Lolin D1 Mini Pro and the Ambient Light shield use Wire.begin(D2, D1);
-
+  
+  // Prepare the light meter
+  Wire.begin();// Initialize the I2C bus (BH1750 library doesn't do this automatically)
+  
   lightMeter.begin();
 
-  delay(3000);  // Warte auf Terminal
+  delay(3000);  // Wait for Terminal
+
+  // Start up LEDs
   FastLED.addLeds<LED_TYPE, DATA_PIN>(leds, NUM_LEDS);
   FastLED.setBrightness(BRIGHTNESS);
   leds[0] = CRGB::White;
   FastLED.show();
   delay(200);
 
+  // Needs the time to start this clock. Fails otherwise
+  if (!rtc.begin()) {
+    while (1);
+  }
 
+  // Setting compile time to watch time
+  if (rtc.lostPower() || syncOnFirstStart) {
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  }
   
 
+  pinMode(SW, INPUT);   // Hier wird der Interrupt installiert.
+  attachInterrupt(digitalPinToInterrupt(SW), Interrupt, CHANGE); // Sobald sich der Status (CHANGE) des Interrupt Pins (SW = D2) ändern, soll der Interrupt Befehl (onInterrupt)ausgeführt werden.
+  encoderMovement();
+}
 
-  if (!rtc.begin()) {
-    Serial.println("Kann RTC nicht finden");
-    while (1)
-      ;
-  }
+void Interrupt() // Beginn des Interrupts. Wenn der Rotary Knopf betätigt wird, springt das Programm automatisch an diese Stelle. Nachdem...
 
-  if (rtc.lostPower() || syncOnFirstStart) {
-    Serial.println("Die RTC war vom Strom getrennt. Die Zeit wird neu synchronisiert.");
-    // ueber den folgenden Befehl wird die die RTC mit dem Zeitstempel versehen, zu dem der
-    // Kompilierungsvorgang gestartet wurde, beginnt aber erst mit dem vollstaendigen Upload
-    // selbst mit zaehlen. Daher geht die RTC von Anfang an wenige Sekunden nach.
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-    Serial.println(__DATE__);
-  }
+{
+  Serial.println("Switch betaetigt"); //... das Signal ausgegeben wurde, wird das Programm fortgeführt.
 }
 
 void manipulateDisplay(int ledArray[], int sizeLEDArray) {
@@ -70,15 +87,11 @@ void generateDisplayDefault() {
 
 void generateDisplayMinutes(int minute) {
  
-  
- 
   // If FÜNF needs to be shown
   if (((4 < minute) && (minute  < 10)) || ((24 < minute) && (minute < 30)) || ((34 < minute) && (minute  < 40)) || (54 < minute)) {
     int five[] = { 7, 8, 9, 10 };
     manipulateDisplay(five, 4);
   }
-
-  
 
   // If UHR needs to be shown
   if (minute < 5) {
@@ -130,7 +143,6 @@ int generateDisplayHours(int input_hour, int minute) {
     hour++;
   }
 
-
   if (hour % 12 == 0) {
     int defaultDisplay[] = { 86, 85, 84, 83, 82};
     manipulateDisplay(defaultDisplay, 5);
@@ -181,7 +193,6 @@ void generateDisplay(int hour, int minute) {
   FastLED.show();
 }
 
-
 void setBrightness() {
   int light_level = lightMeter.readLightLevel();
   if(light_level < 5) {
@@ -193,29 +204,43 @@ void setBrightness() {
   else {
     FastLED.setBrightness(light_level*2);
   }
-   
-  Serial.print("light: "); 
-  Serial.println(light_level); 
+}
+
+int encoderMovement() {
+  // Check if the setting of the rotary encoder is changed:
+  long curPosition = meinEncoder.read(); 
+
+  if (curPosition > oldPosition +3) {
+    oldPosition = curPosition;       
+    return 1;
+  }
+  else if (curPosition < oldPosition -3) {
+    oldPosition = curPosition;
+    return -1;
+  }
+  else {
+    return 0;
+  }
 }
 
 void loop() {
   
-  DateTime now = rtc.now();
-  generateDisplay(now.hour(), now.minute());
-  Serial.println(now.hour()%12);
-  Serial.println(now.minute());
-  setBrightness();
-  delay(10);
-  
-  /*for (int i = 0; i < 24; i++) {
-    for (int j = 0; j < 60; j++) {
-      generateDisplay(i, j);
-      delay(250);
-    }
+  int encMove = encoderMovement();
+  if(encMove != 0) {
+    DateTime now = rtc.now();
+    if(encMove == 1) {
+      rtc.adjust(now+TimeSpan(60-now.second()));
+    } 
+    else if(encMove == -1) {
+      rtc.adjust(now-TimeSpan(60+now.second()));
+    } 
   }
-  FastLED.show();
-  delay(1000);
-  */
+  DateTime displayTime = rtc.now();
+
+  //Get the current time and set the display accordingly
+  generateDisplay(displayTime.hour(), displayTime.minute());
+  setBrightness();
+
 }
 
 
