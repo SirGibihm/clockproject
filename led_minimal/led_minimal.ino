@@ -3,7 +3,7 @@
 
 #define DATA_PIN 3
 #define LED_TYPE NEOPIXEL  // WS2812B
-#define NUM_LEDS 11
+#define NUM_LEDS 121
 #define BRIGHTNESS 100
 
 CRGB leds[NUM_LEDS];
