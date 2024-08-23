@@ -17,10 +17,10 @@ I constructed my clock using four layers with an 11 by 11 LED grid (121 LEDs in 
 1) **Bottom Layer** - the bottom layer (the one facing the wall) consists of a 9mm plywood that is used to hold the LED strips. I used a router to cut a groove of around 2mm to completly flush-sink the light strips. I chose 55cm by 55cm for my watch. The LEDs are glued on in an S-like pattern starting with the first LED (index=0) in the top left when looking at it from the front. So the 11th LED (Index = 10) is at the very top right. I added a table below that tries to show you how they are indexed. 
 2) **Middle Layer** - it consists of a layer with 11x11 holes drilled into it, each 3.33cm center to cetner. The holes have a diameter of 2.4cm which perfectly fit my watch face. I used the router again to also cut multiple "chambers" into wall-facing side of this layer to create space for the Arduino and cables. It was a tight fit though. Not only does the layer house the electronics, it also allows the light from the LEDs to beam out ensuring even lighting of the letters.
 3) **Diffusion Layer** - To ensure the light is diffused correctly, I chose a 60cm by 60cm semi-translucent plate of acrylic glas. While I am not sure what exactly I ordered back in the day, I know it was from https://www.plexiglas.de/de/
-4) **Top Layer** - This has the letters cut into it and will pull everything together.
+4) **Top Layer** - This has the letters cut into it and will pull everything together. I uploaded an STL and a SkechUpProject version of mine to the 3D Design folder.
 
 I attached the bottom layer to the middle layer using screws, the middle layer to the diffusion layer using glue and the diffusion layer to the top layer also using glue.
-I also printed a little holder for the photoelectric sensor and a dial for the rotary encoder. You can fit those any way you like though!
+I also printed a little holder for the photoelectric sensor and a dial for the rotary encoder as well as a holder designed to be hooked onto a nail or a screw in your wall. They are all attached in the 3D_Design folder. 
 
 ## What you need (Electronics):
 - [Lichtsensor BH1750](https://www.az-delivery.de/en/products/gy-302-bh1750-lichtsensor-lichtstaerke-modul-fuer-arduino-und-raspberry-pi)
